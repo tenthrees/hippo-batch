@@ -39,6 +39,7 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps",async (req,res)=>{
     var {startAccount,bankCode,direction,steps} = req.params;
     for(var i=0;i<steps;i++){
         var serial_no;
+        console.log(`${i}  ------------------------><`)
         direction == "up" ? serial_no = Number(startAccount) + i : serial_no = startAccount - i;
         var gen = await generate_nuban(serial_no,bankCode);
         var hippoExist = await hippo.findOne({accountNumber:gen});
@@ -51,20 +52,24 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps",async (req,res)=>{
                 res.json({error:"error in connect"});
             }
             var data = resp.data;
-            var pdata = {
-                bvn : data.beneficiaryBvn,
-                accountNumber : gen,
-                name : data.customerAccountName,
-                bankCode : bankCode,
-                dateMined : new Date(),
-                dump : data
-            };
-            var person = new hippo(pdata);
-            try{
-                person.save();
-            }
-            catch(e){
-                res.json({error:"error saving/connecting to db"});
+            if (data.customerAccountName != null){
+                    
+                var pdata = {
+                    bvn : data.beneficiaryBvn,
+                    accountNumber : gen,
+                    name : data.customerAccountName,
+                    bankCode : bankCode,
+                    dateMined : new Date(),
+                    dump : data
+                };
+                var person = new hippo(pdata);
+                try{
+                    person.save();
+                    
+                }
+                catch(e){
+                    res.json("error saving")
+                }
             }
         }
         else console.log(`${gen} exists`);
