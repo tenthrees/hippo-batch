@@ -41,6 +41,13 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps",async (req,res)=>{
         var serial_no;
         console.log(`${i}  ------------------------><`)
         direction == "up" ? serial_no = Number(startAccount) + i : serial_no = startAccount - i;
+        var serial_no_length = serial_no.toString().length;
+        if (serial_no_length < 9){
+            var zeroAmount = 9 - serial_no_length;
+            for (var o = 0 ; o < zeroAmount; o++){
+                serial_no = "0" + serial_no;
+            }
+        }
         var gen = await generate_nuban(serial_no,bankCode);
         var hippoExist = await hippo.findOne({accountNumber:gen});
         if (hippoExist == null){
