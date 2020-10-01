@@ -12,8 +12,9 @@ const axios = require("axios");
 const {generate_nuban} = require("./cbn/nuban_algo");
 const mongoose=require("mongoose");
 require("./models/hippo")
+require("./models/hippoMetrics");
 var hippo = mongoose.model("hippo");
-
+var hippoMetrics = mongoose.model("hippoMetrics");
 if (process.env.NODE_ENV == 'production') var mongodbURL= 'mongodb+srv://hippo:hippo@cluster0.ztvy8.gcp.mongodb.net/hippopotamus?retryWrites=true&w=majority';
 else if (process.env.NODE_ENV == 'development') var mongodbURL='mongodb://localhost:27017/hippopotamus';
 else mongodbURL= 'mongodb+srv://hippo:hippo@cluster0.ztvy8.gcp.mongodb.net/hippopotamus?retryWrites=true&w=majority';
@@ -35,6 +36,37 @@ app.use((req, res, next)=> {
   next();
 });
 
+const lastMineUp = async () => {
+    var hM = await hippoMetrics.find({});
+    return hM[0].lastMineUp;
+}
+const lastMineDown = async () => {
+    var hM = await hippoMetrics.find({});
+    return hM[0].lastMineDown;
+}
+const mineAmount = async () => {
+    var hM = await hippoMetrics.find({});
+    return hM[0].mineAmount;
+}
+
+const setLastMineUp = async (d) => {
+    var hM = await hippoMetrics.findOne({});
+    hM.lastMineUp = d;
+    hM.save();
+}
+
+const setLastMineDown = async (d) => {
+    var hM = await hippoMetrics.findOne({});
+    hM.lastMineDown = d;
+    hM.save();
+}
+
+const setMineAmount = async () => {
+    var hM = await hippoMetrics.findOne({});
+    hM.mineAmount = Number(hM.mineAmount) + 1;
+    hM.save();
+}
+
 app.get("/mine/:startAccount/:bankCode/:direction/:steps",async (req,res)=>{
     var {startAccount,bankCode,direction,steps} = req.params;
     for(var i=0;i<steps;i++){
@@ -49,8 +81,11 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps",async (req,res)=>{
             }
         }
         var gen = await generate_nuban(serial_no,bankCode);
+        
         var hippoExist = await hippo.findOne({accountNumber:gen});
         if (hippoExist == null){
+            var isHigh = Math.max(await lastMineUp()[`accountNumber`], gen) == gen;
+            var isLow = Math.min(await lastMineDown()[`accountNumber`] , gen) == gen;
             try{
                 var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
                 //console.log(`${resp.data}`);
@@ -70,9 +105,13 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps",async (req,res)=>{
                     dump : data
                 };
                 var person = new hippo(pdata);
+                
+                if (isHigh) setLastMineUp(pdata);
+                else if (isLow) setLastMineDown(pdata);
+                else console.log("in-between");
                 try{
+                    await setMineAmount();
                     person.save();
-                    
                 }
                 catch(e){
                     res.json("error saving")
@@ -84,7 +123,9 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps",async (req,res)=>{
     res.json({success:"mining finished"});
 })
 
-
+app.get("/ping",async (req,res) => {
+    res.json("ping received");
+})
 app.listen(process.env.PORT ? process.env.PORT : 9190 , (e) => {
     if (e) throw e;
     console.log("..mining in session");
