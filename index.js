@@ -238,7 +238,7 @@ chip = async (x) => {
     }
 }
 app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>{
-    var {timeFrame,bankCode,direction} = req.params;
+    var {timeFrame,bankCode,direction,hippoLeg} = req.params;
     var timeStart = (new Date().getTime()) /1000;
     var serial_no, startAccount, i = 0;
     startAccount = direction == 'up' ? await lastMineUpBank(bankCode).accountNumber : await lastMineDownBank(bankCode).accountNumber;
