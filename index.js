@@ -187,9 +187,7 @@ chip = async (x) => {
     var {timeStart,timeFrame,serial_no,startAccount,i,direction,bankCode,hippoLeg} = x;
     ping(timeFrame,hippoLeg);
     while(Number(Math.round((new Date().getTime()/1000) - timeStart)) <= timeFrame){
-        console.log("...x..")
         i++;
-        console.log(`${i}  ------------------------><`)
         direction == "up" ? (
             serial_no = Number(startAccount) + i 
         ): serial_no = startAccount - i;
@@ -206,18 +204,18 @@ chip = async (x) => {
         var hippoExist = await hippo.findOne({
             accountNumber: gen
         });
+        console.log(hippoExist)
         if (hippoExist == null) {
+            console.log("fetching")
             try {
                 var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
                 //console.log(`${resp.data}`);
             } catch (e) {
-                res.json({
-                    error: "error in connect"
-                });
+                console.log("Error connecting");
             }
             var data = resp.data;
             if (data.customerAccountName != null) {
-
+                console.log("fetched");
                 var pdata = {
                     bvn: data.beneficiaryBvn,
                     accountNumber: gen,
@@ -228,7 +226,7 @@ chip = async (x) => {
                 };
                 var person = new hippo(pdata);
                 try {
-                    await setMineAmount();
+                     setMineAmount();
                     console.log("saving");
                     person.save();
                 } catch (e) {
