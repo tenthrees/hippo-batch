@@ -210,7 +210,7 @@ chip = async (x) => {
             console.log("fetching")
             try {
                 var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
-                //console.log(`${resp.data}`);
+                console.log(`${resp.data.customerAccountName}`);
             } catch (e) {
                 console.log("Error connecting");
             }
