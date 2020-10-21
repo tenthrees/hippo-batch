@@ -229,6 +229,7 @@ chip = async (x) => {
                 var person = new hippo(pdata);
                 try {
                     await setMineAmount();
+                    console.log("saving");
                     person.save();
                 } catch (e) {
                     res.json("error saving")
