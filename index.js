@@ -223,6 +223,7 @@ const chip = async (x) => {
                             //console.log(data)
                             if (data.customerAccountName != null) {
                                 //console.log("fetched");
+                                console.log(gen)
                                 var pdata = {
                                     bvn: data.beneficiaryBvn,
                                     accountNumber: gen,
@@ -248,7 +249,7 @@ const chip = async (x) => {
                 
             } else console.log(`${gen} exists`);
         }
-        else console.log("auto pilot done");
+        else return console.log("autopilot done");
     }
     
 }
