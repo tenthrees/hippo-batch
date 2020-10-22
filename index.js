@@ -187,34 +187,7 @@ ping = async (t,hippoLeg) => {
     }, 300000);
 }
 var save = async (e,r,b) => {
-    r = await r;
-    if(e){
-        console.log(e);
-
-    }
-    else{
-        var data = JSON.parse(r.body);
-        console.log(data)
-        if (data.customerAccountName != null) {
-            console.log("fetched");
-            var pdata = {
-                bvn: data.beneficiaryBvn,
-                accountNumber: gen,
-                name: data.customerAccountName,
-                bankCode: bankCode,
-                dateMined: new Date(),
-                dump: data
-            };
-            var person = new hippo(pdata);
-            try {
-                setMineAmount();
-                console.log("saving");
-                person.save();
-            } catch (e) {
-                res.json("error saving")
-            }
-        }
-    }
+    
 }
 const chip = async (x) => {
     var {timeStart,timeFrame,serial_no,startAccount,i,direction,bankCode,hippoLeg} = x;
@@ -241,7 +214,35 @@ const chip = async (x) => {
             if (hippoExist == null) {
                 console.log("fetching");
                 try{
-                    request(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`,save);
+                    request(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`,async (e,r,b)=>{
+                        r = await r;
+                        if(e){
+                            console.log(e);
+                        }
+                        else{
+                            var data = JSON.parse(r.body);
+                            //console.log(data)
+                            if (data.customerAccountName != null) {
+                                //console.log("fetched");
+                                var pdata = {
+                                    bvn: data.beneficiaryBvn,
+                                    accountNumber: gen,
+                                    name: data.customerAccountName,
+                                    bankCode: bankCode,
+                                    dateMined: new Date(),
+                                    dump: data
+                                };
+                                var person = new hippo(pdata);
+                                try {
+                                    setMineAmount();
+                                    console.log("saving");
+                                    person.save();
+                                } catch (e) {
+                                    console.log("error saving")
+                                }
+                            }
+                        }
+                    });
                 }
                 catch(e){
                     console.log(e);
