@@ -14,6 +14,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 const axios = require("axios");
+const request = require('request');
 const {
     generate_nuban
 } = require("./cbn/nuban_algo");
@@ -185,6 +186,36 @@ ping = async (t,hippoLeg) => {
         else clearInterval();
     }, 300000);
 }
+var save = async (e,r,b) => {
+    r = await r;
+    if(e){
+        console.log(e);
+
+    }
+    else{
+        var data = JSON.parse(r.body);
+        console.log(data)
+        if (data.customerAccountName != null) {
+            console.log("fetched");
+            var pdata = {
+                bvn: data.beneficiaryBvn,
+                accountNumber: gen,
+                name: data.customerAccountName,
+                bankCode: bankCode,
+                dateMined: new Date(),
+                dump: data
+            };
+            var person = new hippo(pdata);
+            try {
+                setMineAmount();
+                console.log("saving");
+                person.save();
+            } catch (e) {
+                res.json("error saving")
+            }
+        }
+    }
+}
 const chip = async (x) => {
     var {timeStart,timeFrame,serial_no,startAccount,i,direction,bankCode,hippoLeg} = x;
     ping(timeFrame,hippoLeg);
@@ -207,31 +238,15 @@ const chip = async (x) => {
             var hippoExist = await hippo.findOne({
                 accountNumber: gen
             });
-            console.log(hippoExist)
             if (hippoExist == null) {
                 console.log("fetching");
-                var resp = await Axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
-                console.log(`${resp.data.customerAccountName}`);
-                var data = resp.data;
-                if (data.customerAccountName != null) {
-                    console.log("fetched");
-                    var pdata = {
-                        bvn: data.beneficiaryBvn,
-                        accountNumber: gen,
-                        name: data.customerAccountName,
-                        bankCode: bankCode,
-                        dateMined: new Date(),
-                        dump: data
-                    };
-                    var person = new hippo(pdata);
-                    try {
-                        setMineAmount();
-                        console.log("saving");
-                        person.save();
-                    } catch (e) {
-                        res.json("error saving")
-                    }
+                try{
+                    request(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`,save);
                 }
+                catch(e){
+                    console.log(e);
+                }
+                
             } else console.log(`${gen} exists`);
         }
         else return;
