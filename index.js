@@ -18,6 +18,7 @@ const {
     generate_nuban
 } = require("./cbn/nuban_algo");
 const mongoose = require("mongoose");
+const { default: Axios } = require("axios");
 require("./models/hippo")
 require("./models/hippoMetrics");
 var hippo = mongoose.model("hippo");
@@ -209,7 +210,7 @@ const chip = async (x) => {
             console.log(hippoExist)
             if (hippoExist == null) {
                 console.log("fetching");
-                var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
+                var resp = await Axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
                 console.log(`${resp.data.customerAccountName}`);
                 var data = resp.data;
                 if (data.customerAccountName != null) {
