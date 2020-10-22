@@ -184,7 +184,7 @@ ping = async (t,hippoLeg) => {
         else clearInterval();
     }, 300000);
 }
-chip = async (x) => {
+const chip = async (x) => {
     var {timeStart,timeFrame,serial_no,startAccount,i,direction,bankCode,hippoLeg} = x;
     ping(timeFrame,hippoLeg);
     while(Number(Math.round((new Date().getTime()/1000) - timeStart)) <= timeFrame){
@@ -210,7 +210,6 @@ chip = async (x) => {
             console.log("fetching");
             var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
             console.log(`${resp.data.customerAccountName}`);
-            
             var data = resp.data;
             if (data.customerAccountName != null) {
                 console.log("fetched");
@@ -241,7 +240,8 @@ app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>
     startAccount = direction == 'up' ? await lastMineUpBank(bankCode).accountNumber : await lastMineDownBank(bankCode).accountNumber;
     startAccount ? "" : startAccount = nubans[`${bankCode}`];
     console.log("started from :: " + startAccount);
-    chip(
+    res.json({type : "success", msg : "Autopilot activated"});
+    await chip(
         {
             timeStart : timeStart,
             timeFrame : timeFrame,
@@ -253,7 +253,7 @@ app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>
             hippoLeg : hippoLeg
         }
     )
-    res.json({type : "success", msg : "Autopilot activated"});
+    
 })
 app.get("/ping", async (req, res) => {
     res.json({type:"success",msg:"ping received"});
