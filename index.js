@@ -192,6 +192,7 @@ var save = async (e,r,b) => {
 const chip = async (x) => {
     var {timeStart,timeFrame,serial_no,startAccount,i,direction,bankCode,hippoLeg} = x;
     ping(timeFrame,hippoLeg);
+    console.log("Auto pilot started");
     for(;;){
         if(Number(Math.round((new Date().getTime()/1000) - timeStart)) <= timeFrame){
             i++;
@@ -206,13 +207,11 @@ const chip = async (x) => {
                 }
             }
             var gen = await generate_nuban(serial_no, bankCode);
-            console.log(gen)
             
             var hippoExist = await hippo.findOne({
                 accountNumber: gen
             });
             if (hippoExist == null) {
-                console.log("fetching");
                 try{
                     request(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`,async (e,r,b)=>{
                         r = await r;
@@ -235,7 +234,6 @@ const chip = async (x) => {
                                 var person = new hippo(pdata);
                                 try {
                                     setMineAmount();
-                                    console.log("saving");
                                     person.save();
                                 } catch (e) {
                                     console.log("error saving")
@@ -250,8 +248,9 @@ const chip = async (x) => {
                 
             } else console.log(`${gen} exists`);
         }
-        else return;
+        else console.log("auto pilot done");
     }
+    
 }
 app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>{
     var {timeFrame,bankCode,direction,hippoLeg} = req.params;
