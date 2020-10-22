@@ -161,7 +161,7 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps", async (req, res) => {
 var nubans = {
     "011" : "312730235",
     "044" : "010396170",
-    "058": "0148867412"
+    "058": "014886741"
 }
 ping = async (t,hippoLeg) => {
     clearInterval()
