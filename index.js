@@ -260,8 +260,8 @@ app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>
     startAccount = direction == 'up' ? await lastMineUpBank(bankCode).accountNumber : await lastMineDownBank(bankCode).accountNumber;
     startAccount ? "" : startAccount = nubans[`${bankCode}`];
     console.log("started from :: " + startAccount);
-    res.json({type : "success", msg : "Autopilot activated"});
-    await chip(
+    
+     chip(
         {
             timeStart : timeStart,
             timeFrame : timeFrame,
@@ -273,7 +273,7 @@ app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>
             hippoLeg : hippoLeg
         }
     )
-    
+    res.json({type : "success", msg : "Autopilot activated"});
 })
 app.get("/ping", async (req, res) => {
     res.json({type:"success",msg:"ping received"});
