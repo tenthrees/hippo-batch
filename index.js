@@ -95,13 +95,14 @@ const setMineAmount = async () => {
     hM.save();
 }
 
-app.get("/mine/:startAccount/:bankCode/:direction/:steps", async (req, res) => {
+app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req, res) => {
     var {
         startAccount,
         bankCode,
         direction,
         steps
     } = req.params;
+    ping(7200,req.params.hippoLeg);
     for (var i = 0; i < steps; i++) {
         var serial_no;
         direction == "up" ? serial_no = Number(startAccount) + i : serial_no = startAccount - i;
@@ -186,10 +187,7 @@ ping = async (t,hippoLeg) => {
     }, 300000);
 }
 var startAuto = async (x) => {
-    chip(x);
-    setInterval(async() => {
-        chip(x)
-    }, x.timeFrame);
+    chip(x); 
 }
 const chip = async (x) => {
     var serial_no;
@@ -241,7 +239,7 @@ const chip = async (x) => {
             }
         } else console.log(`${gen} exists`);
     }
-    
+    startAuto();
 }
 app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>{
     var {timeFrame,bankCode,direction,hippoLeg} = req.params;
