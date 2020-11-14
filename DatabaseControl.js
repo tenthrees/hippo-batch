@@ -1,7 +1,7 @@
 const mysql = require("mysql");
 const config = require("./dbconfig")
 const connection = mysql.createConnection(config)
-const {codes} = require("../cbn/digit_codes");
+const {codes} = require("./cbn/digit_codes");
 
 
 const dbMethods = {
