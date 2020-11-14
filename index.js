@@ -3,6 +3,8 @@ const bank_codes = require("./cbn/digit_codes");
 
 const express = require("express");
 const app = express();
+const dbMethods = require("./DatabaseControl");;
+
 var bodyParser = require('body-parser');
 var sizeLimit = process.env.SIZE_LIMIT || '5mb';
 app.use(bodyParser.json({
@@ -18,22 +20,6 @@ const request = require('request');
 const {
     generate_nuban
 } = require("./cbn/nuban_algo");
-const mongoose = require("mongoose");
-const { default: Axios } = require("axios");
-require("./models/hippo")
-require("./models/hippoMetrics");
-var hippo = mongoose.model("hippo");
-var hippoMetrics = mongoose.model("hippoMetrics");
-if (process.env.NODE_ENV == 'production') var mongodbURL = 'mongodb+srv://hippo:hippo@cluster0.ztvy8.gcp.mongodb.net/hippopotamus?retryWrites=true&w=majority';
-else if (process.env.NODE_ENV == 'development') var mongodbURL = 'mongodb://localhost:27017/hippopotamus';
-else mongodbURL = 'mongodb+srv://hippo:hippo@cluster0.ztvy8.gcp.mongodb.net/hippopotamus?retryWrites=true&w=majority';
-
-try {
-    mongoose.connect(mongodbURL)
-} catch (error) {
-    console.log(error)
-    throw error
-}
 
 app.use(express.static(__dirname + "/public"))
 app.set('views', __dirname + "/views")
@@ -115,12 +101,9 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
         }
         var gen = await generate_nuban(serial_no, bankCode);
 
-        var hippoExist = await hippo.findOne({
-            accountNumber: gen
-        });
-        if (hippoExist == null) {
-            var isHigh = Math.max(Number(await lastMineUp().accountNumber), Number(gen)) == gen;
-            var isLow = Math.min(Number(await lastMineDown().accountNumber), Number(gen)) == gen;
+        var hippoExist = await dbMethods.accountExists(gen,bankCode);
+
+        if (!hippoExist) {
             try {
                 var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
                 console.log(`${resp.data}`);
@@ -138,16 +121,13 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
                     name: data.customerAccountName,
                     bankCode: bankCode,
                     dateMined: new Date(),
-                    dump: data
+                    timeMined : new Date().getTime(),
+                    kycLevel : data.kycLevel
                 };
-                var person = new hippo(pdata);
-
-                if (isHigh) setLastMineUp(pdata);
-                else if (isLow) setLastMineDown(pdata);
-                else "";
+                
                 try {
-                    await setMineAmount();
-                    person.save();
+                    var save =await dbMethods.insertAccount(bankCode,pdata);
+                    console.log(save);
                 } catch (e) {
                     console.log(e)
                     console.log("error saving")
@@ -166,7 +146,7 @@ var nubans = {
     "058": "014886741"
 }
 ping = async (t,hippoLeg) => {
-    clearInterval()
+    clearInterval();
     var timeStart = (new Date().getTime()) /1000;
     setInterval(async () => {
         var now = (new Date().getTime())/1000;
@@ -186,6 +166,7 @@ ping = async (t,hippoLeg) => {
         else clearInterval();
     }, 300000);
 }
+
 var startAuto = async (x) => {
     chip(x); 
 }
@@ -205,39 +186,36 @@ const chip = async (x) => {
         }
         var gen = await generate_nuban(serial_no, bankCode);
         console.log(gen)
-        var hippoExist = await hippo.findOne({
-            accountNumber: gen
-        });
-        if (hippoExist == null) {
-            try {
+        var hippoExist = await dbMethods.accountExists(gen,bankCode);
+        if (!hippoExist){
+            try{
                 var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
                 //console.log(`${resp.data}`);
-            } catch (e) {
-                console.log({
-                    error: "error in connect"
-                });
+            }
+            catch(e){
+                console.log(e.errno,e.code,e.code);
             }
             var data = resp.data;
-            if (data.customerAccountName != null) {
-
+            if (data.customerAccountName != null){
                 var pdata = {
-                    bvn: data.beneficiaryBvn,
-                    accountNumber: gen,
-                    name: data.customerAccountName,
-                    bankCode: bankCode,
-                    dateMined: new Date(),
-                    dump: data
+                    bvn : data.beneficiaryBvn,
+                    accountNumber : gen,
+                    name : data.customerAccountName,
+                    bankCode : bankCode,
+                    dateMined : new Date(),
+                    timeMined : new Date().getTime(),
+                    kycLevel : data.kycLevel
                 };
-                //console.log(pdata)
-                var person = new hippo(pdata);
-                try {
-                    await setMineAmount();
-                    person.save();
-                } catch (e) {
-                    console.log("error saving")
+                try{
+                    var save =await dbMethods.insertAccount(bankCode,pdata);
+                    console.log(save);
+                }
+                catch(e){
+                    console.log(e);
                 }
             }
-        } else console.log(`${gen} exists`);
+        }
+        else console.log(`${gen} exists`);
     }
     startAuto();
 }
