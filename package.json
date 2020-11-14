@@ -11,8 +11,8 @@
     "mysql": "^2.18.1",
     "request": "^2.88.2"
   },
-  "engines" : {
-    "node" : "12.x"
+  "engines": {
+    "node": "12.x"
   },
   "devDependencies": {},
   "scripts": {
