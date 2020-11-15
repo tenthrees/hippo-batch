@@ -52,6 +52,7 @@ const dbMethods = {
                 else if (r.length > 0){
                     resolve(true);
                 }
+                else resolve(false)
             });
         })
         console.log(quer)
@@ -61,6 +62,10 @@ const dbMethods = {
     endConnection : async () => {
         connection.end()
     }
+}
+t = async () =>{
+    var ae = await dbMethods.accountExists("0148867412","058");
+    console.log(ae);
 }
 /*dbMethods.insertAccount("058",{
     accountNumber : "0103961700",

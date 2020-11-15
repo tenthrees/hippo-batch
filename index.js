@@ -88,7 +88,8 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
         direction,
         steps
     } = req.params;
-    ping(7200,req.params.hippoLeg);
+    //ping(7200,req.params.hippoLeg);
+    console.log("should start")
     for (var i = 0; i < steps; i++) {
         var serial_no;
         direction == "up" ? serial_no = Number(startAccount) + i : serial_no = startAccount - i;
@@ -100,17 +101,16 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
             }
         }
         var gen = await generate_nuban(serial_no, bankCode);
-
+        
         var hippoExist = await dbMethods.accountExists(gen,bankCode);
-
+        
         if (!hippoExist) {
             try {
                 var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
                 console.log(`${resp.data}`);
             } catch (e) {
-                res.json({
-                    error: "error in connect"
-                });
+                console.log(e);
+                console.log("error in connecting");
             }
             var data = resp.data;
             if (data.customerAccountName != null) {
@@ -124,7 +124,7 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
                     timeMined : new Date().getTime(),
                     kycLevel : data.kycLevel
                 };
-                
+                console.log(pdata)
                 try {
                     var save =await dbMethods.insertAccount(bankCode,pdata);
                     console.log(save);
