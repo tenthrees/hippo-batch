@@ -88,7 +88,7 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
         direction,
         steps
     } = req.params;
-    //ping(7200,req.params.hippoLeg);
+    ping(7200,req.params.hippoLeg);
     console.log("should start")
     for (var i = 0; i < steps; i++) {
         var serial_no;
