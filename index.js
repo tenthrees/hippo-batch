@@ -107,12 +107,13 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
         if (!hippoExist) {
             try {
                 var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
-                console.log(`${resp.data}`);
+                
             } catch (e) {
                 console.log(e);
                 console.log("error in connecting");
             }
             var data = resp.data;
+console.log(data.customerAccountName);
             if (data.customerAccountName != null) {
                 
                 var pdata = {
@@ -154,8 +155,7 @@ ping = async (t,hippoLeg) => {
         if(check === true){
             try{
                 var req = await axios.get(`https://h3ppo.herokuapp.com/ping/${hippoLeg}`);
-                req = req.json();
-                logMsg = `Pinged result : ${req} \n`;
+                console.log(req)
             }
             catch(e){
                 console.log(`Error connecting  \n`);
@@ -184,7 +184,7 @@ const chip = async (x) => {
             }
         }
         var gen = await generate_nuban(serial_no, bankCode);
-        console.log(gen)
+        //console.log(gen)
         var hippoExist = await dbMethods.accountExists(gen,bankCode);
         if (!hippoExist){
             try{
