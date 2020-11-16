@@ -39,7 +39,8 @@ const dbMethods = {
                 connection.query(insertAcc, (e,r,f) => {
                     if(e) reject(e.message);
                     else if (r) {
-                      console.log(r);
+                      console.log(f);
+console.log('inserying');
                       resolve(r?r:f);
                     }
                     else resolve(r)
