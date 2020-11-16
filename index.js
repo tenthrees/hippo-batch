@@ -30,55 +30,30 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Methods", "PUT,DELETE,POST,GET")
     next();
 });
-
-const lastMineUp = async () => {
-    var hM = await hippo.findOne({
-        mineMetrics: true
-    });
-    return (hM == null) ? "unCalculated" : hM.lastMineUp;
-}
-const lastMineDown = async () => {
-    var hM = await hippo.findOne({
-        mineMetrics: true
-    });
-    return (hM == null) ? "unCalculated" : hM.lastMineDown;
-}
-const mineAmount = async () => {
-    var hM = await hippo.findOne({
-        mineMetrics: true
-    });
-    return (hM == null) ? "unCalculated" : hM.mineAmount;
+ping = async (t,hippoLeg) => {
+    clearInterval()
+    var timeStart = (new Date().getTime()) /1000;
+    setInterval(async () => {
+        var now = (new Date().getTime())/1000;
+        var diff = Number(Math.round(now - timeStart));
+        var check = (diff <= Number(t));
+        if(check === true){
+            try{
+                var req = await axios.get(`https://h3ppo.herokuapp.com/ping/${hippoLeg}`);
+                console.log("trying to ping")
+            }
+            catch(e){
+                console.log(`Error pinging  \n`);
+            }
+        }
+        else clearInterval();
+    }, 300000);
 }
 const lastMineUpBank = async (code) => {
-    var hM = await hippo.find({bankCode : code},null,{sort:{accountNumber : -1}});
-    var rt = hM[0];
-    return rt ? rt : null;
+    return await dbMethods.mineUp(code);
 }
 const lastMineDownBank = async (code) => {
-    var hM = await hippo.find({bankCode : code},null,{sort:{accountNumber : 1}});
-    var rt = hM[0];
-    return rt ? rt : null;
-}
-const setLastMineUp = async (d) => {
-    d = await d;
-    var hM = await hippo.findOne({
-        mineMetrics: true
-    });
-    hM.lastMineUp = d;
-    hM.save();
-}
-
-const setLastMineDown = async (d) => {
-    d = await d;
-    var hM = await hippo.findOne({mineMetrics : true});
-    hM.lastMineDown = d;
-    hM.save();
-}
-
-const setMineAmount = async () => {
-    var hM = await hippo.findOne({mineMetrics : true});
-    hM.mineAmount = Number(hM.mineAmount) + 1;
-    hM.save();
+    return await dbMethods.mineDown(code);
 }
 
 app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req, res) => {
@@ -88,11 +63,11 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
         direction,
         steps
     } = req.params;
-    ping(7200,req.params.hippoLeg);
+    ping(200000,req.params.hippoLeg);
     console.log("should start")
     for (var i = 0; i < steps; i++) {
         var serial_no;
-        direction == "up" ? serial_no = Number(startAccount) + i : serial_no = startAccount - i;
+        direction == "up" ? serial_no = Number(startAccount) + i : serial_no = Number(startAccount) - i;
         var serial_no_length = serial_no.toString().length;
         if (serial_no_length < 9) {
             var zeroAmount = 9 - serial_no_length;
@@ -113,9 +88,8 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
                 console.log("error in connecting");
             }
             var data = resp.data;
-console.log(data.customerAccountName);
+            console.log(data.customerAccountName);
             if (data.customerAccountName != null) {
-                
                 var pdata = {
                     bvn: data.beneficiaryBvn,
                     accountNumber: gen,
@@ -144,26 +118,6 @@ var nubans = {
     "011" : "312730235",
     "044" : "010396170",
     "058": "014886741"
-}
-ping = async (t,hippoLeg) => {
-    clearInterval();
-    var timeStart = (new Date().getTime()) /1000;
-    setInterval(async () => {
-        var now = (new Date().getTime())/1000;
-        var diff = Number(Math.round(now - timeStart));
-        var check = (diff <= Number(t));
-        if(check === true){
-            try{
-                var req = await axios.get(`https://h3ppo.herokuapp.com/ping/${hippoLeg}`);
-                console.log(req)
-            }
-            catch(e){
-                console.log(`Error connecting  \n`);
-                console.log(e)
-            }
-        }
-        else clearInterval();
-    }, 300000);
 }
 
 var startAuto = async (x) => {
@@ -220,9 +174,8 @@ const chip = async (x) => {
 }
 app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>{
     var {timeFrame,bankCode,direction,hippoLeg} = req.params;
-    
     var startAccount;
-    startAccount = direction == 'up' ? await lastMineUpBank(bankCode).accountNumber : await lastMineDownBank(bankCode).accountNumber;
+    startAccount = (direction == 'up') ? await lastMineUpBank(bankCode).substring(0,9) : await lastMineDownBank(bankCode).substring(0,9);
     startAccount ? "" : startAccount = nubans[`${bankCode}`];
     console.log("started from :: " + startAccount);
     ping(timeFrame,hippoLeg);

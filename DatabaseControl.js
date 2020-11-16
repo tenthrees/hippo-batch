@@ -3,7 +3,6 @@ const config = require("./dbconfig")
 const connection = mysql.createConnection(config)
 const {codes} = require("./cbn/digit_codes");
 
-
 const dbMethods = {
     setup : async () => {
         codes.forEach(bank => {
@@ -31,23 +30,18 @@ const dbMethods = {
     },
     insertAccount : async (bank,data) => {
         var {accountNumber,name,bvn,bankCode,dateMined,timeMined,kycLevel} = data;
-       /* var ae = await dbMethods.accountExists(accountNumber,bank);*/
-       /* if (!ae){*/
-            let insertAcc = `INSERT INTO bank${bank}(accountNumber,name,bvn,bankCode,dateMined,timeMined,kycLevel)
-                         VALUES('${accountNumber}','${name}','${bvn}','${bankCode}','${dateMined}','${timeMined}','${kycLevel}')`;
-            return new Promise((resolve,reject) => {
-                connection.query(insertAcc, (e,r,f) => {
-                    if(e) reject(e.message);
-                    else if (r) {
-                      console.log(f);
-console.log('inserying');
-                      resolve(r?r:f);
-                    }
-                    else resolve(r)
-                })
+        let insertAcc = `INSERT INTO bank${bank}(accountNumber,name,bvn,bankCode,dateMined,timeMined,kycLevel)
+                        VALUES('${accountNumber}','${name}','${bvn}','${bankCode}','${dateMined}','${timeMined}','${kycLevel}')`;
+        return new Promise((resolve,reject) => {
+            connection.query(insertAcc, (e,r,f) => {
+                if(e) reject(e.message);
+                else if (r) {
+                    console.log('inserting');
+                    resolve(r?r:f);
+                }
+                else resolve(r)
             })
-      /*  }*/
-      /* else console.log("account Exists");*/
+        });
     },
     accountExists : async (acc,bank) => {
         var q = `SELECT * FROM bank${bank} WHERE accountNumber = '${acc}'`;
@@ -59,19 +53,75 @@ console.log('inserying');
                 }
                 else resolve(false)
             });
+        });        
+    },
+    mineUp : async (bank) => {
+        var q = `SELECT MAX(accountNumber) FROM bank${bank}`;
+        return new Promise((resolve,reject)=>{
+            connection.query(q,(e,r,f)=>{
+                if(e) reject(e.message);
+                else if (r){
+                    resolve(r[0][`MAX(accountNumber)`]);
+                }
+                else {
+                    console.log(f,r);
+                    resolve(r);
+                }
+            })
         })
-        console.log(quer)
-        /**/
-        
+    },
+    mineDown : async (bank) => {
+        var q = `SELECT MIN(accountNumber) FROM bank${bank}`;
+        return new Promise((resolve,reject)=>{
+            connection.query(q,(e,r,f)=>{
+                if(e) reject(e.message);
+                else if (r){
+                    resolve(r[0][`MIN(accountNumber)`]);
+                }
+                else {
+                    resolve(r);
+                }
+            })
+        });
+    },
+    totalBank : async (bank) => {
+        var q = `SELECT COUNT(*) FROM bank${bank}`;
+        return new Promise((resolve,reject)=>{
+            connection.query(q,(e,r,f)=>{
+                if(e) reject(e.message);
+                else if (r){
+                    console.log(r)
+                    resolve(r[0][`COUNT(*)`]);
+                }
+                else {
+                    resolve(r);
+                }
+            })
+        });
+    },
+    total : async () => {
+        var q = `SELECT COUNT(*) `;
+        return new Promise((resolve,reject)=>{
+            connection.query(q,(e,r,f)=>{
+                if(e) reject(e.message);
+                else if (r){
+                    resolve(r[0][`COUNT(*)`]);
+                }
+                else {
+                    resolve(r);
+                }
+            })
+        });
     },
     endConnection : async () => {
         connection.end()
     }
 }
 t = async () =>{
-    var ae = await dbMethods.accountExists("0148867412","058");
+    var ae = await dbMethods.total();
     console.log(ae);
 }
+//t()
 /*dbMethods.insertAccount("058",{
     accountNumber : "0103961700",
     name : "TIN CAN",
