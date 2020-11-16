@@ -124,10 +124,9 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
                     timeMined : new Date().getTime(),
                     kycLevel : data.kycLevel
                 };
-                console.log(pdata)
+                console.log(pdata.accountNumber)
                 try {
-                    var save =await dbMethods.insertAccount(bankCode,pdata);
-                    console.log(save);
+                    dbMethods.insertAccount(bankCode,pdata);
                 } catch (e) {
                     console.log(e)
                     console.log("error saving")
@@ -207,8 +206,8 @@ const chip = async (x) => {
                     kycLevel : data.kycLevel
                 };
                 try{
-                    var save =await dbMethods.insertAccount(bankCode,pdata);
-                    console.log(save);
+                    dbMethods.insertAccount(bankCode,pdata);
+                 
                 }
                 catch(e){
                     console.log(e);
