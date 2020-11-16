@@ -31,18 +31,22 @@ const dbMethods = {
     },
     insertAccount : async (bank,data) => {
         var {accountNumber,name,bvn,bankCode,dateMined,timeMined,kycLevel} = data;
-        var ae = await dbMethods.accountExists(accountNumber,bank);
-        if (!ae){
+       /* var ae = await dbMethods.accountExists(accountNumber,bank);*/
+       /* if (!ae){*/
             let insertAcc = `INSERT INTO bank${bank}(accountNumber,name,bvn,bankCode,dateMined,timeMined,kycLevel)
                          VALUES('${accountNumber}','${name}','${bvn}','${bankCode}','${dateMined}','${timeMined}','${kycLevel}')`;
             return new Promise((resolve,reject) => {
                 connection.query(insertAcc, (e,r,f) => {
-                    if(e) reject(e.message,e.sqlMessage);
-                    else resolve(r?r:f);
+                    if(e) reject(e.message);
+                    else if (r) {
+                      console.log(r);
+                      resolve(r?r:f);
+                    }
+                    else resolve(r)
                 })
             })
-        }
-        else console.log("account Exists");
+      /*  }*/
+      /* else console.log("account Exists");*/
     },
     accountExists : async (acc,bank) => {
         var q = `SELECT * FROM bank${bank} WHERE accountNumber = '${acc}'`;
