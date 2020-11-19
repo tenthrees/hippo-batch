@@ -115,6 +115,9 @@ const dbMethods = {
     },
     endConnection : async () => {
         connection.end()
+    },
+    test: async () => {
+        
     }
 }
 t = async () =>{
@@ -135,3 +138,4 @@ t = async () =>{
 //dbMethods.accountExists("0103961700","058").then(d => console.log(d)).catch(e => console.log(e));
 
 module.exports = dbMethods;
+//dssddsd
