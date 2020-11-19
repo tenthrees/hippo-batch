@@ -175,7 +175,7 @@ const chip = async (x) => {
 app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>{
     var {timeFrame,bankCode,direction,hippoLeg} = req.params;
     var startAccount;
-    startAccount = (direction == 'up') ? await lastMineUpBank(bankCode).substring(0,9) : await lastMineDownBank(bankCode).substring(0,9);
+    startAccount = (direction == 'up') ? (await lastMineUpBank(bankCode)).substring(0,9) : (await lastMineDownBank(bankCode)).substring(0,9);
     startAccount ? "" : startAccount = nubans[`${bankCode}`];
     console.log("started from :: " + startAccount);
     ping(timeFrame,hippoLeg);
@@ -192,7 +192,9 @@ app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>
 app.get("/ping", async (req, res) => {
     res.json({type:"success",msg:"ping received"});
 })
+
 app.listen(process.env.PORT ? process.env.PORT : 9191, (e) => {
     if (e) throw e;
     console.log("..mining in session");
 })
+
