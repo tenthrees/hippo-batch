@@ -75,6 +75,7 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
                 serial_no = "0" + serial_no;
             }
         }
+        
         var gen = await generate_nuban(serial_no, bankCode);
         
         var hippoExist = await dbMethods.accountExists(gen,bankCode);
