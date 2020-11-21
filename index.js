@@ -67,7 +67,7 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
     console.log("should start")
     for (var i = 0; i < steps; i++) {
         var serial_no;
-        direction == "up" ? serial_no = Number(startAccount) + i : serial_no = Number(startAccount) - i;
+        (direction == "up") ? serial_no = Number(startAccount) + i : serial_no = Number(startAccount) - i;
         var serial_no_length = serial_no.toString().length;
         if (serial_no_length < 9) {
             var zeroAmount = 9 - serial_no_length;
