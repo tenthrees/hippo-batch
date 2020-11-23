@@ -3,7 +3,9 @@ const bank_codes = require("./cbn/digit_codes");
 
 const express = require("express");
 const app = express();
-const dbMethods = require("./DatabaseControl");;
+const dbMethods = require("./DatabaseControl");
+
+const URL = "https://abp-mobilebank.accessbankplc.com:8443/VBPAccess/webresources/nipNameInquiry2"
 
 var bodyParser = require('body-parser');
 var sizeLimit = process.env.SIZE_LIMIT || '5mb';
@@ -77,12 +79,13 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
         }
         
         var gen = await generate_nuban(serial_no, bankCode);
-        
+        console.log(gen)
         var hippoExist = await dbMethods.accountExists(gen,bankCode);
         
         if (!hippoExist) {
+            
             try {
-                var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
+                var resp = await axios.get(`${URL}?destinationBankCode=${bankCode}&accountNumber=${gen}`);
                 
             } catch (e) {
                 console.log(e);
@@ -139,11 +142,11 @@ const chip = async (x) => {
             }
         }
         var gen = await generate_nuban(serial_no, bankCode);
-        //console.log(gen)
+        console.log(gen)
         var hippoExist = await dbMethods.accountExists(gen,bankCode);
         if (!hippoExist){
             try{
-                var resp = await axios.get(`https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2?destinationBankCode=${bankCode}&accountNumber=${gen}`);
+                var resp = await axios.get(`${URL}?destinationBankCode=${bankCode}&accountNumber=${gen}`);
                 //console.log(`${resp.data}`);
             }
             catch(e){
