@@ -111,7 +111,10 @@ app.get("/mine/:startAccount/:bankCode/:direction/:steps/:hippoLeg", async (req,
                     console.log("error saving")
                 }
             }
-        } else console.log(`${gen} exists`);
+        } else {
+            steps++;
+            console.log(`${gen} exists`);
+        }
     }
     res.json({
         success: "mining finished"
