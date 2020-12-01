@@ -14,7 +14,7 @@ const codes = [
     {
         bank : "Diamond Bank",
         code : "063"
-    },
+    },    
     {
         bank : "Ecobank",
         code : "050"
@@ -47,6 +47,11 @@ const codes = [
         code : "069"
     },
     {
+        bank : "Jaiz Bank",
+        code : "301"
+    },
+    
+    {
         bank : 'HERITAGE BANK',
         code : '030'
     }, {
@@ -60,6 +65,11 @@ const codes = [
         bank : "Oceanic Bank",
         code : "056"
     },
+    {
+        bank : "Providus Bank",
+        code : "101"
+    },
+    
     {
         bank : "BankPhb",
         code : "082"
@@ -84,6 +94,11 @@ const codes = [
         bank : "Sterling Bank",
         code : "232"
     },
+    {
+        bank : "Suntrust Bank Nigeria",
+        code : "100"
+    },
+    
     {
         bank : "United Bank for Africa UBA",
         code : "033"
