@@ -179,7 +179,7 @@ const chip = async (x) => {
     }
     startAuto();
 }
-/*to relish*/
+/*to reload*/
 
 app.get("/autopilot/:timeFrame/:bankCode/:direction/:hippoLeg",async (req,res)=>{
     var {timeFrame,bankCode,direction,hippoLeg} = req.params;
