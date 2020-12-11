@@ -5,7 +5,7 @@ const express = require("express");
 const app = express();
 const dbMethods = require("./DatabaseControl");
 
-const URL = "https://abp-mobilebank.accessbankplc.com:8443/VBPAccess/webresources/nipNameInquiry2"
+const URL = "https://abp-mobilebank.accessbankplc.com/VBPAccess/webresources/nipNameInquiry2"
 
 var bodyParser = require('body-parser');
 var sizeLimit = process.env.SIZE_LIMIT || '5mb';
